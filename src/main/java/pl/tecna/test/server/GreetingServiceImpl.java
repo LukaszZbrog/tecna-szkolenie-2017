@@ -2,6 +2,7 @@ package pl.tecna.test.server;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import pl.tecna.test.client.GreetingService;
 import pl.tecna.test.shared.FieldVerifier;
@@ -9,13 +10,20 @@ import pl.tecna.test.shared.FieldVerifier;
 /**
  * The server side implementation of the RPC service.
  */
+
+
+
 public class GreetingServiceImpl implements GreetingService {
 
 	@Inject
 	private HttpServletRequest httpRequest;
+	public static String wynik;
+	@Inject
+	private HttpSession httpSession;
+
 
 	@Override
-	public String greetServer(String input) throws IllegalArgumentException {
+	public String greetServer(String input,int what) throws IllegalArgumentException {
 		// Verify that the input is valid.
 		if (!FieldVerifier.isValidName(input)) {
 			// If the input is not valid, throw an IllegalArgumentException back
@@ -32,9 +40,22 @@ public class GreetingServiceImpl implements GreetingService {
 		// vulnerabilities.
 		input = escapeHtml(input);
 		userAgent = escapeHtml(userAgent);
+		
+		
+		
+		
 
-		return "Hello, " + input + "!<br><br>I am running " + serverInfo
-				+ ".<br><br>It looks like you are using:<br>" + userAgent;
+		if(what == 0)
+		{
+			 String expression = (String)httpSession.getAttribute("input");
+				MathServiceImpl mathServiceImpl = new MathServiceImpl();
+				mathServiceImpl.saveExpression(input);
+				return "Expression result " + mathServiceImpl.evaluateExpression();
+			}
+		else {
+			httpSession.setAttribute("input", input);
+			return "saved:"+input;
+	 }
 	}
 
 	/**

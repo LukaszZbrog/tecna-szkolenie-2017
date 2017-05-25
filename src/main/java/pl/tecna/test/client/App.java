@@ -1,8 +1,17 @@
 package pl.tecna.test.client;
 
+import pl.tecna.test.server.GreetingServiceImpl;
 import pl.tecna.test.shared.FieldVerifier;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
+import org.omg.CORBA.PRIVATE_MEMBER;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dev.generator.ast.WhileLoop;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -41,17 +50,20 @@ public class App implements EntryPoint {
    */
   public void onModuleLoad() {
     final Button sendButton = new Button( messages.sendButton() );
+    final Button resultButton = new Button( messages.resultButton() );
     final TextBox nameField = new TextBox();
     nameField.setText( messages.nameField() );
     final Label errorLabel = new Label();
+    
 
     // We can add style names to widgets
     sendButton.addStyleName("sendButton");
-
+    resultButton.addStyleName("resultButton");
     // Add the nameField and sendButton to the RootPanel
     // Use RootPanel.get() to get the entire body element
     RootPanel.get("nameFieldContainer").add(nameField);
     RootPanel.get("sendButtonContainer").add(sendButton);
+    RootPanel.get("resultButtonContainer").add(resultButton);
     RootPanel.get("errorLabelContainer").add(errorLabel);
 
     // Focus the cursor on the name field when the app loads
@@ -69,9 +81,9 @@ public class App implements EntryPoint {
     final HTML serverResponseLabel = new HTML();
     VerticalPanel dialogVPanel = new VerticalPanel();
     dialogVPanel.addStyleName("dialogVPanel");
-    dialogVPanel.add(new HTML("<b>Sending name to the server:</b>"));
+    dialogVPanel.add(new HTML("<b>Server replay:</b>"));
     dialogVPanel.add(textToServerLabel);
-    dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
+    dialogVPanel.add(new HTML("<br>Server replay :</b>"));
     dialogVPanel.add(serverResponseLabel);
     dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
     dialogVPanel.add(closeButton);
@@ -92,7 +104,16 @@ public class App implements EntryPoint {
        * Fired when the user clicks on the sendButton.
        */
       public void onClick(ClickEvent event) {
-        sendNameToServer();
+ 
+    	 
+    	 if( event.getSource() == resultButton){
+   		 resultNameToServer();
+   	 }
+    	 if( event.getSource() == sendButton){
+       		 sendNameToServer();
+       	 }
+    	  
+      
       }
 
       /**
@@ -106,21 +127,32 @@ public class App implements EntryPoint {
 
       /**
        * Send the name from the nameField to the server and wait for a response.
+     * @throws ScriptException 
        */
+
+
       private void sendNameToServer() {
         // First, we validate the input.
         errorLabel.setText("");
         String textToServer = nameField.getText();
+        
         if (!FieldVerifier.isValidName(textToServer)) {
-          errorLabel.setText("Please enter at least four characters");
+          errorLabel.setText("Please enter at least three characters");
           return;
         }
+        if (!FieldVerifier.isValidExpresion(textToServer)) {
+            errorLabel.setText("Please enter valid character");
+            return;
+        }
+   
+        
+        
 
         // Then, we send the input to the server.
         sendButton.setEnabled(false);
         textToServerLabel.setText(textToServer);
         serverResponseLabel.setText("");
-        greetingService.greetServer(textToServer, new AsyncCallback<String>() {
+        greetingService.greetServer(textToServer,1, new AsyncCallback<String>() {
           public void onFailure(Throwable caught) {
             // Show the RPC error message to the user
             dialogBox.setText("Remote Procedure Call - Failure");
@@ -139,11 +171,40 @@ public class App implements EntryPoint {
           }
         });
       }
+      private void resultNameToServer() {
+          // First, we validate the input.
+          errorLabel.setText("");
+          String textToServer = nameField.getText();
+
+          // Then, we send the input to the server.
+          resultButton.setEnabled(true);
+          textToServerLabel.setText(textToServer);
+          serverResponseLabel.setText("");
+          greetingService.greetServer(textToServer,0, new AsyncCallback<String>() {
+            public void onFailure(Throwable caught) {
+              // Show the RPC error message to the user
+              dialogBox.setText("Remote Procedure Call - Failure");
+              serverResponseLabel.addStyleName("serverResponseLabelError");
+              serverResponseLabel.setHTML(SERVER_ERROR);
+              dialogBox.center();
+              closeButton.setFocus(true);
+            }
+
+            public void onSuccess(String result) {
+              dialogBox.setText("Remote Procedure Call");
+              serverResponseLabel.removeStyleName("serverResponseLabelError");
+              serverResponseLabel.setHTML(result);
+              dialogBox.center();
+              closeButton.setFocus(true);
+            }
+          });
+        }
     }
 
     // Add a handler to send the name to the server
     MyHandler handler = new MyHandler();
     sendButton.addClickHandler(handler);
+    resultButton.addClickHandler(handler);
     nameField.addKeyUpHandler(handler);
   }
 }

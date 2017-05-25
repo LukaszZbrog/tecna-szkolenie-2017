@@ -1,5 +1,7 @@
 package pl.tecna.test.shared;
 
+import org.omg.CORBA.PRIVATE_MEMBER;
+
 /**
  * <p>
  * FieldVerifier validates that the name the user enters is valid.
@@ -37,6 +39,16 @@ public class FieldVerifier {
     if (name == null) {
       return false;
     }
-    return name.length() > 3;
+    return name.length() >2;
   }
+  
+  public static boolean isValidExpresion(String name){
+		for(int i=0;i<name.length();i++)
+		{
+			if(!Character.isDigit(name.charAt(i))&&name.charAt(i)!='+'&&name.charAt(i)!='-'&&name.charAt(i)!='*'&&name.charAt(i)!='/'&&name.charAt(i)!='('&&name.charAt(i)!=')')
+				return false;
+		}
+		return true;
 }
+}
+

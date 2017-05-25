@@ -12,11 +12,13 @@ public class SimpleSingletonTest {
 		}
 	}
 	
+
+	
 	@Test
 	public void testIsSingleton() {
 		SimpleSingleton s1 = SimpleSingleton.getInstance();
 		SimpleSingleton s2 = SimpleSingleton.getInstance();
 		
-//		Assert.assertEquals(s1, s2);
+		//Assert.assertEquals(s1, s2);
 	}
 }
